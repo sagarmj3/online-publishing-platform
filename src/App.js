@@ -1,6 +1,6 @@
 import React from 'react';
-import Content from './Components/Content';
-import Header from './Components/Header';
+import Publish from './Components/Publish.';
+import View from './Components/View';
 import Service from "./service";
 
 class App extends React.Component {
@@ -10,7 +10,10 @@ class App extends React.Component {
 
     this.state = {
       authenticate: false,
-      cards: []
+      jwt: '',
+      cards: [],
+      user: '',
+      publish: ''
     }
 
     this.handleLoginCall();
@@ -23,7 +26,7 @@ class App extends React.Component {
     })
     
     if(response.status === 200){
-      this.setState({authenticate: true});
+      this.setState({authenticate: true, user: response.data.user.username, jwt: response.data.jwt});
       this.handleGetCall(response);
     }else{
       alert("Authentication failed");
@@ -41,18 +44,51 @@ class App extends React.Component {
     }
 }
 
+  handleAddCall = (e) => {
+    this.setState({publish: e});
+  }
+
+  prophandleSubmit = async (fields) => {
+
+    let Title = fields.title;
+    let Overview = fields.overview;
+    let response = await Service.post('cubyts-best-practices', {
+      headers: {
+        Authorization: 'Bearer ' + this.state.jwt
+      },
+      data: { 
+        Title, 
+        Overview
+      }
+    });
+    if(response){
+        alert("Data added successfully");
+    }
+
+  }
+
   render(){
   return (
     <div>
-      <Header/>
+      
       {
-      this.state.authenticate && <div className="container">
-        <Content 
+        this.state.publish === 'publish' ? 
+         
+        <Publish
+           propUser={this.state.user}
+           prophandleSubmit={(e) => {this.prophandleSubmit(e)}}
+        />
+
+        :
+
+        <View 
+          propUser={this.state.user}
+          propHandleAdd={(e) => this.handleAddCall(e)}
+          propAuthenticate={this.state.authenticate}
           propHandleCards={this.state.cards}
         />
-      </div>
-      } 
 
+      }
     </div>
   );
 }
